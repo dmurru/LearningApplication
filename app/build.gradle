@@ -1,0 +1,66 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+apply plugin: 'com.github.triplet.play'
+
+android {
+    def config = parseXmlConfig()
+
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.siendas.randomproject"
+        minSdkVersion 16
+        targetSdkVersion 28
+        versionCode 4
+        versionName "1.1.3"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(config.get("appStoreFile"))
+            storePassword config.get("appStorePassword")
+            keyAlias config.get("appKeyAlias")
+            keyPassword config.get("appKeyPassword")
+        }
+    }
+    buildTypes {
+        release {
+            zipAlignEnabled true
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+play {
+    jsonFile = file('../keystore/siendas-automator.json')
+    track = 'internal'
+    userFraction = 0.2
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation 'com.android.support:appcompat-v7:28.0.0-rc02'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+// this method parses the config.xml file, modified by the builder.ps1 before gradle compile
+def parseXmlConfig() {
+    def root = (new XmlParser()).parse('config.xml')
+    println("configuration xml parsing completed.")
+    [
+            appStoreFile    : root.storeFile.text(),
+            appStorePassword: root.storePassword.text(),
+            appKeyAlias     : root.keyAlias.text(),
+            appKeyPassword  : root.keyPassword.text(),
+    ]
+}
